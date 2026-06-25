@@ -1,135 +1,152 @@
 @page "/"
-@using System.Runtime.InteropServices.JavaScript
-@implements IDisposable
+@using IntakeApp.Services
+@using IntakeApp.Models
+@inject IJSRuntime JSRuntime
+@inject IntakeSyncService SyncService
+@inject PdfService PdfService
 
-<ErrorBoundary @ref="errorBoundary">
-    <ChildContent>
-        <div class="glass-pane-container" id="glassPaneContainer">
-            <!-- App Logo/Header -->
-            <div class="app-header">
-                <span class="logo-text">StyleCut</span>
-                <span class="subtitle-text">Hairstyle Simulator PWA</span>
-            </div>
+<div class="glass-pane-container" id="glassPaneContainer">
+    <div class="app-header">
+        <span class="logo-text">Dondlinger Digital</span>
+        <span class="subtitle-text">Solution Intake</span>
+    </div>
+
+    <div class="glass-pane-ui">
+        <div class="glass-panel" style="width: 80%; max-width: 600px; margin: 0 auto; padding: 2rem;">
             
-            <!-- Layer 0: Mirrored Video Feed -->
-            <video id="cameraFeed" class="glass-pane-video" playsinline autoplay muted></video>
-            
-            <!-- Layer 1: Styling canvas -->
-            <canvas id="measureCanvas" class="glass-pane-canvas"></canvas>
-
-            <!-- Layer 2: Interactive control panel -->
-            <div class="glass-pane-ui">
-                <div class="ui-panel">
-                    
-                    <!-- Mode Buttons -->
-                    <div class="mode-toggles">
-                        <button class="mode-btn @(CurrentMode == "Fit" ? "active" : "")" @onclick='() => SetInteractionMode("Fit")'>
-                            🛠️ Position
-                        </button>
-                        <button class="mode-btn @(CurrentMode == "Cut" ? "active" : "")" @onclick='() => SetInteractionMode("Cut")'>
-                            ✂️ Cut Hair
-                        </button>
-                        <button class="mode-btn @(CurrentMode == "Dye" ? "active" : "")" @onclick='() => SetInteractionMode("Dye")'>
-                            🎨 Dye
-                        </button>
-                    </div>
-
-                    <!-- Hairstyles Catalog Carousel -->
-                    <div class="style-carousel">
-                        <button class="style-card @(SelectedStyleId == "bob" ? "active" : "")" @onclick='() => SetStyle("bob")'>
-                            <span class="style-icon">👩</span>
-                            <span class="style-name">Bob Cut</span>
-                        </button>
-                        <button class="style-card @(SelectedStyleId == "afro" ? "active" : "")" @onclick='() => SetStyle("afro")'>
-                            <span class="style-icon">🧑‍🦱</span>
-                            <span class="style-name">Afro</span>
-                        </button>
-                        <button class="style-card @(SelectedStyleId == "spiky" ? "active" : "")" @onclick='() => SetStyle("spiky")'>
-                            <span class="style-icon">🧑‍🎤</span>
-                            <span class="style-name">Spiky Punk</span>
-                        </button>
-                        <button class="style-card @(SelectedStyleId == "braids" ? "active" : "")" @onclick='() => SetStyle("braids")'>
-                            <span class="style-icon">👧</span>
-                            <span class="style-name">Braids</span>
-                        </button>
-                    </div>
-
-                    <!-- Dye Colors Panel -->
-                    <div class="color-palette">
-                        <button class="color-swatch @(SelectedColorHex == "#ff3b30" ? "active" : "")" style="background-color: #ff3b30;" @onclick='() => SetColor("#ff3b30")'></button>
-                        <button class="color-swatch @(SelectedColorHex == "#ff9500" ? "active" : "")" style="background-color: #ff9500;" @onclick='() => SetColor("#ff9500")'></button>
-                        <button class="color-swatch @(SelectedColorHex == "#ffcc00" ? "active" : "")" style="background-color: #ffcc00;" @onclick='() => SetColor("#ffcc00")'></button>
-                        <button class="color-swatch @(SelectedColorHex == "#4cd964" ? "active" : "")" style="background-color: #4cd964;" @onclick='() => SetColor("#4cd964")'></button>
-                        <button class="color-swatch @(SelectedColorHex == "#5ac8fa" ? "active" : "")" style="background-color: #5ac8fa;" @onclick='() => SetColor("#5ac8fa")'></button>
-                        <button class="color-swatch @(SelectedColorHex == "#007aff" ? "active" : "")" style="background-color: #007aff;" @onclick='() => SetColor("#007aff")'></button>
-                        <button class="color-swatch @(SelectedColorHex == "#5856d6" ? "active" : "")" style="background-color: #5856d6;" @onclick='() => SetColor("#5856d6")'></button>
-                        <button class="color-swatch @(SelectedColorHex == "#e543b3" ? "active" : "")" style="background-color: #e543b3;" @onclick='() => SetColor("#e543b3")'></button>
-                        <button class="color-swatch @(SelectedColorHex == "#000000" ? "active" : "")" style="background-color: #000000;" @onclick='() => SetColor("#000000")'></button>
-                    </div>
-
-                    <!-- Action Bar -->
-                    <div class="button-group">
-                        <button class="btn btn-secondary" @onclick="ResetWorkspace">Reset Haircut</button>
-                        <button class="btn btn-primary" @onclick="ExportCapture" style="background: #28c76f; color: white;">📸 Take Snapshot</button>
-                    </div>
+            @if (currentStep == 1)
+            {
+                <h3>Step 1: Project Goal</h3>
+                <p>What is the primary objective of this project?</p>
+                <textarea class="glass-input" @bind="submission.ProjectGoal" rows="4" style="width: 100%;" placeholder="Describe the goal..."></textarea>
+                
+                <div class="button-group" style="margin-top: 20px;">
+                    <button class="glass-btn primary" @onclick="NextStep">Next</button>
                 </div>
-            </div>
+            }
+            else if (currentStep == 2)
+            {
+                <h3>Step 2: Business Impact</h3>
+                <p>Select the expected business impact.</p>
+                <select class="glass-input" @bind="submission.BusinessImpact" style="width: 100%;">
+                    <option value="">-- Select Impact --</option>
+                    <option value="Low">Low - Process Improvement</option>
+                    <option value="Medium">Medium - Cost Savings</option>
+                    <option value="High">High - Strategic Advantage</option>
+                </select>
+
+                <div class="button-group" style="margin-top: 20px;">
+                    <button class="glass-btn secondary" @onclick="PrevStep">Back</button>
+                    <button class="glass-btn primary" @onclick="NextStep">Next</button>
+                </div>
+            }
+            else if (currentStep == 3)
+            {
+                <h3>Step 3: Service Options</h3>
+                <p>Select the modular services required:</p>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <label>
+                        <input type="checkbox" checked="@submission.ServiceOptions.Contains("Real-time Tracking")" @onchange='(e) => ToggleService("Real-time Tracking", e.Value)' />
+                        Real-time Tracking
+                    </label>
+                    <label>
+                        <input type="checkbox" checked="@submission.ServiceOptions.Contains("Offline Data Sync")" @onchange='(e) => ToggleService("Offline Data Sync", e.Value)' />
+                        Offline Data Sync
+                    </label>
+                    <label>
+                        <input type="checkbox" checked="@submission.ServiceOptions.Contains("Camera/Vector Overlays")" @onchange='(e) => ToggleService("Camera/Vector Overlays", e.Value)' />
+                        Camera/Vector Overlays
+                    </label>
+                    <label>
+                        <input type="checkbox" checked="@submission.ServiceOptions.Contains("PDF Generation")" @onchange='(e) => ToggleService("PDF Generation", e.Value)' />
+                        PDF Generation
+                    </label>
+                </div>
+
+                <div class="button-group" style="margin-top: 20px;">
+                    <button class="glass-btn secondary" @onclick="PrevStep">Back</button>
+                    <button class="glass-btn primary" @onclick="NextStep">Next</button>
+                </div>
+            }
+            else if (currentStep == 4)
+            {
+                <h3>Step 4: Budget Alignment</h3>
+                <p>Select the budget range.</p>
+                <select class="glass-input" @bind="submission.BudgetAlignment" style="width: 100%;">
+                    <option value="">-- Select Budget --</option>
+                    <option value="< $10k">Under $10,000</option>
+                    <option value="$10k - $50k">$10,000 - $50,000</option>
+                    <option value="$50k+">$50,000+</option>
+                </select>
+
+                <div class="button-group" style="margin-top: 20px;">
+                    <button class="glass-btn secondary" @onclick="PrevStep">Back</button>
+                    <button class="glass-btn primary" @onclick="SubmitForm" style="background: #28c76f; color: white;">Submit</button>
+                </div>
+            }
+            else if (currentStep == 5)
+            {
+                <h3>Submission Complete</h3>
+                <p>Your intake form has been queued successfully for Dondlinger Digital.</p>
+                <button class="glass-btn primary" @onclick="ResetForm">Start Over</button>
+            }
+
         </div>
-    </ChildContent>
-    <ErrorContent Context="exception">
-        <div class="glass-pane-ui" style="display: flex; justify-content: center; align-items: center; height: 100%;">
-            <div class="ui-panel" style="background: rgba(255, 0, 0, 0.25); backdrop-filter: blur(10px); border: 1px solid rgba(255, 0, 0, 0.4); text-align: center; color: white;">
-                <h3>Hardware Error</h3>
-                <p style="margin: 10px 0;">@exception.Message</p>
-                <button class="btn btn-primary" @onclick="RecoverFromError">Retry Camera</button>
-            </div>
-        </div>
-    </ErrorContent>
-</ErrorBoundary>
+    </div>
+</div>
 
 @code {
-    private ErrorBoundary? errorBoundary;
+    private int currentStep = 1;
+    private IntakeRequest submission = new();
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private void NextStep() => currentStep++;
+    private void PrevStep() => currentStep--;
+
+    private void ToggleService(string service, object? isCheckedObj)
     {
-        if (firstRender)
+        bool isChecked = false;
+        if (isCheckedObj is bool b) isChecked = b;
+
+        if (isChecked && !submission.ServiceOptions.Contains(service))
         {
-            await InitializeJavaScriptAsync();
+            submission.ServiceOptions.Add(service);
+        }
+        else if (!isChecked && submission.ServiceOptions.Contains(service))
+        {
+            submission.ServiceOptions.Remove(service);
         }
     }
 
-    private void RecoverFromError()
+    private async Task SubmitForm()
     {
-        errorBoundary?.Recover();
-        _ = InitializeJavaScriptAsync();
-    }
-
-    private async Task InitializeJavaScriptAsync()
-    {
+        submission.Timestamp = DateTime.UtcNow;
         try
         {
-            // Dynamic imports
-            await JSHost.ImportAsync("ruler", "../js/ruler.js");
-            await JSHost.ImportAsync("camera-overlay.js", "../js/camera-overlay.js");
-
-            // Bind exports to JS
-            BindInterop();
-
-            // Initialize camera overlay by binding to existing elements under container
-            string? cameraError = await CameraInterop.InitializeMediaOverlay("glassPaneContainer");
-            if (!string.IsNullOrEmpty(cameraError))
-            {
-                throw new Exception(cameraError);
-            }
-
-            // Initialize drawing/canvas interop
-            InitCanvasInterop();
-            try { SetCalibrationTypeJS(SelectedStyleId); } catch {}
+            submission.DeviceMetadata = await JSRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
+        }
+        catch
+        {
+            submission.DeviceMetadata = "Unknown Device";
+        }
+        
+        try
+        {
+            var pdfBytes = PdfService.GenerateProjectRequestSummary(submission);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            await JSRuntime.InvokeVoidAsync("window.shotStackSaver.saveAndDownloadFile", "ProjectRequestSummary.pdf", base64);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed initialization: {ex.Message}");
-            throw;
+            Console.WriteLine($"PDF Generation Error: {ex.Message}");
         }
+
+        await SyncService.AddEntryAsync(submission);
+        currentStep = 5;
+    }
+
+    private void ResetForm()
+    {
+        submission = new();
+        currentStep = 1;
     }
 }
