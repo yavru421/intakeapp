@@ -1015,5 +1015,104 @@ body, html {
     cursor: pointer;
 }
 
+/* Glassmorphism Design System */
+.glass-pane-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(135deg, rgba(35,134,54,0.05), rgba(13,17,23,0.95));
+    overflow-y: auto;
+    position: relative;
+    z-index: 1;
+}
 
+.glass-pane-ui {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+    z-index: 2;
+}
 
+.glass-panel {
+    background: rgba(22, 27, 34, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    color: var(--text-white);
+    position: relative;
+    z-index: 3;
+}
+
+.glass-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: var(--text-white);
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    position: relative;
+    z-index: 10;
+}
+
+.glass-input:focus {
+    border-color: var(--brand-accent);
+    box-shadow: 0 0 0 3px rgba(35, 134, 54, 0.25);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.glass-btn {
+    padding: 12px 28px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 10;
+}
+
+.glass-btn.primary {
+    background: var(--brand-accent);
+    color: white;
+    box-shadow: 0 6px 16px rgba(35, 134, 54, 0.35);
+}
+
+.glass-btn.primary:hover {
+    background: var(--brand-accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(35, 134, 54, 0.45);
+}
+
+.glass-btn.primary:active {
+    transform: scale(0.96);
+}
+
+.glass-btn.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-white);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.glass-btn.secondary:active {
+    transform: scale(0.96);
+}
+
+.button-group {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
