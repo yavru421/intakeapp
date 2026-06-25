@@ -1,0 +1,135 @@
+@page "/"
+@using System.Runtime.InteropServices.JavaScript
+@implements IDisposable
+
+<ErrorBoundary @ref="errorBoundary">
+    <ChildContent>
+        <div class="glass-pane-container" id="glassPaneContainer">
+            <!-- App Logo/Header -->
+            <div class="app-header">
+                <span class="logo-text">StyleCut</span>
+                <span class="subtitle-text">Hairstyle Simulator PWA</span>
+            </div>
+            
+            <!-- Layer 0: Mirrored Video Feed -->
+            <video id="cameraFeed" class="glass-pane-video" playsinline autoplay muted></video>
+            
+            <!-- Layer 1: Styling canvas -->
+            <canvas id="measureCanvas" class="glass-pane-canvas"></canvas>
+
+            <!-- Layer 2: Interactive control panel -->
+            <div class="glass-pane-ui">
+                <div class="ui-panel">
+                    
+                    <!-- Mode Buttons -->
+                    <div class="mode-toggles">
+                        <button class="mode-btn @(CurrentMode == "Fit" ? "active" : "")" @onclick='() => SetInteractionMode("Fit")'>
+                            🛠️ Position
+                        </button>
+                        <button class="mode-btn @(CurrentMode == "Cut" ? "active" : "")" @onclick='() => SetInteractionMode("Cut")'>
+                            ✂️ Cut Hair
+                        </button>
+                        <button class="mode-btn @(CurrentMode == "Dye" ? "active" : "")" @onclick='() => SetInteractionMode("Dye")'>
+                            🎨 Dye
+                        </button>
+                    </div>
+
+                    <!-- Hairstyles Catalog Carousel -->
+                    <div class="style-carousel">
+                        <button class="style-card @(SelectedStyleId == "bob" ? "active" : "")" @onclick='() => SetStyle("bob")'>
+                            <span class="style-icon">👩</span>
+                            <span class="style-name">Bob Cut</span>
+                        </button>
+                        <button class="style-card @(SelectedStyleId == "afro" ? "active" : "")" @onclick='() => SetStyle("afro")'>
+                            <span class="style-icon">🧑‍🦱</span>
+                            <span class="style-name">Afro</span>
+                        </button>
+                        <button class="style-card @(SelectedStyleId == "spiky" ? "active" : "")" @onclick='() => SetStyle("spiky")'>
+                            <span class="style-icon">🧑‍🎤</span>
+                            <span class="style-name">Spiky Punk</span>
+                        </button>
+                        <button class="style-card @(SelectedStyleId == "braids" ? "active" : "")" @onclick='() => SetStyle("braids")'>
+                            <span class="style-icon">👧</span>
+                            <span class="style-name">Braids</span>
+                        </button>
+                    </div>
+
+                    <!-- Dye Colors Panel -->
+                    <div class="color-palette">
+                        <button class="color-swatch @(SelectedColorHex == "#ff3b30" ? "active" : "")" style="background-color: #ff3b30;" @onclick='() => SetColor("#ff3b30")'></button>
+                        <button class="color-swatch @(SelectedColorHex == "#ff9500" ? "active" : "")" style="background-color: #ff9500;" @onclick='() => SetColor("#ff9500")'></button>
+                        <button class="color-swatch @(SelectedColorHex == "#ffcc00" ? "active" : "")" style="background-color: #ffcc00;" @onclick='() => SetColor("#ffcc00")'></button>
+                        <button class="color-swatch @(SelectedColorHex == "#4cd964" ? "active" : "")" style="background-color: #4cd964;" @onclick='() => SetColor("#4cd964")'></button>
+                        <button class="color-swatch @(SelectedColorHex == "#5ac8fa" ? "active" : "")" style="background-color: #5ac8fa;" @onclick='() => SetColor("#5ac8fa")'></button>
+                        <button class="color-swatch @(SelectedColorHex == "#007aff" ? "active" : "")" style="background-color: #007aff;" @onclick='() => SetColor("#007aff")'></button>
+                        <button class="color-swatch @(SelectedColorHex == "#5856d6" ? "active" : "")" style="background-color: #5856d6;" @onclick='() => SetColor("#5856d6")'></button>
+                        <button class="color-swatch @(SelectedColorHex == "#e543b3" ? "active" : "")" style="background-color: #e543b3;" @onclick='() => SetColor("#e543b3")'></button>
+                        <button class="color-swatch @(SelectedColorHex == "#000000" ? "active" : "")" style="background-color: #000000;" @onclick='() => SetColor("#000000")'></button>
+                    </div>
+
+                    <!-- Action Bar -->
+                    <div class="button-group">
+                        <button class="btn btn-secondary" @onclick="ResetWorkspace">Reset Haircut</button>
+                        <button class="btn btn-primary" @onclick="ExportCapture" style="background: #28c76f; color: white;">📸 Take Snapshot</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ChildContent>
+    <ErrorContent Context="exception">
+        <div class="glass-pane-ui" style="display: flex; justify-content: center; align-items: center; height: 100%;">
+            <div class="ui-panel" style="background: rgba(255, 0, 0, 0.25); backdrop-filter: blur(10px); border: 1px solid rgba(255, 0, 0, 0.4); text-align: center; color: white;">
+                <h3>Hardware Error</h3>
+                <p style="margin: 10px 0;">@exception.Message</p>
+                <button class="btn btn-primary" @onclick="RecoverFromError">Retry Camera</button>
+            </div>
+        </div>
+    </ErrorContent>
+</ErrorBoundary>
+
+@code {
+    private ErrorBoundary? errorBoundary;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await InitializeJavaScriptAsync();
+        }
+    }
+
+    private void RecoverFromError()
+    {
+        errorBoundary?.Recover();
+        _ = InitializeJavaScriptAsync();
+    }
+
+    private async Task InitializeJavaScriptAsync()
+    {
+        try
+        {
+            // Dynamic imports
+            await JSHost.ImportAsync("ruler", "../js/ruler.js");
+            await JSHost.ImportAsync("camera-overlay.js", "../js/camera-overlay.js");
+
+            // Bind exports to JS
+            BindInterop();
+
+            // Initialize camera overlay by binding to existing elements under container
+            string? cameraError = await CameraInterop.InitializeMediaOverlay("glassPaneContainer");
+            if (!string.IsNullOrEmpty(cameraError))
+            {
+                throw new Exception(cameraError);
+            }
+
+            // Initialize drawing/canvas interop
+            InitCanvasInterop();
+            try { SetCalibrationTypeJS(SelectedStyleId); } catch {}
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed initialization: {ex.Message}");
+            throw;
+        }
+    }
+}
