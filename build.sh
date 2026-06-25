@@ -16,4 +16,5 @@ chmod +x dotnet-install.sh
 rm -rf output
 
 # Publish the application using the local SDK installation without runtime relinking (emcc/wasm-tools)
+chmod +x ./dotnet/dotnet
 ./dotnet/dotnet publish -c Release -o output -p:UsingBrowserRuntimeWorkload=false
