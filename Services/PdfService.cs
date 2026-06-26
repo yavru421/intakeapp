@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using PdfSharpCore.Drawing;
 using PdfSharpCore.Drawing.Layout;
 using PdfSharpCore.Pdf;
@@ -12,7 +13,7 @@ public class PdfService
     public byte[] GenerateProjectRequestSummary(IntakeRequest request)
     {
         var document = new PdfDocument();
-        document.Info.Title = "Project Request Summary";
+        document.Info.Title = "Architectural Blueprint";
         var page = document.AddPage();
         var gfx = XGraphics.FromPdfPage(page);
 
@@ -31,14 +32,29 @@ public class PdfService
         gfx.DrawRectangle(XBrushes.SteelBlue, headerRect);
 
         // Title
-        gfx.DrawString("Project Request Summary", titleFont, XBrushes.White, new XRect(0, 0, page.Width, 80), XStringFormats.Center);
+        gfx.DrawString("Architectural Blueprint", titleFont, XBrushes.White, new XRect(0, 0, page.Width, 80), XStringFormats.Center);
         yPosition = 110;
 
-        // Draw Fields
-        yPosition = DrawField(gfx, "Project Goal", request.ProjectGoal, headingFont, normalFont, leftMargin, yPosition, maxWidth);
-        yPosition = DrawField(gfx, "Business Impact", request.BusinessImpact, headingFont, normalFont, leftMargin, yPosition, maxWidth);
-        yPosition = DrawField(gfx, "Service Options", request.ServiceOptions != null && request.ServiceOptions.Count > 0 ? string.Join(", ", request.ServiceOptions) : "None", headingFont, normalFont, leftMargin, yPosition, maxWidth);
-        yPosition = DrawField(gfx, "Budget Alignment", request.BudgetAlignment, headingFont, normalFont, leftMargin, yPosition, maxWidth);
+        // Draw Fields dynamically based on answers
+        if (request.Answers != null && request.Answers.Any())
+        {
+            foreach (var answer in request.Answers)
+            {
+                // Check if we need a new page
+                if (yPosition > page.Height - 100)
+                {
+                    page = document.AddPage();
+                    gfx = XGraphics.FromPdfPage(page);
+                    yPosition = 40;
+                }
+                
+                yPosition = DrawField(gfx, answer.QuestionText, answer.AnswerText, headingFont, normalFont, leftMargin, yPosition, maxWidth);
+            }
+        }
+        else
+        {
+            yPosition = DrawField(gfx, "Status", "No data provided", headingFont, normalFont, leftMargin, yPosition, maxWidth);
+        }
         
         // Footer (Timestamp and Device)
         gfx.DrawLine(new XPen(XColors.LightGray, 1), leftMargin, yPosition + 10, page.Width - leftMargin, yPosition + 10);
@@ -63,7 +79,7 @@ public class PdfService
         // Draw Value with Wrapping
         var formatter = new XTextFormatter(gfx);
         // Estimate height needed
-        int estimatedHeight = 60;
+        int estimatedHeight = 40;
         var rect = new XRect(x, y, maxWidth, estimatedHeight);
         
         // Use a background for the value
@@ -72,6 +88,6 @@ public class PdfService
 
         formatter.DrawString(value ?? "N/A", valueFont, XBrushes.DarkSlateGray, rect);
         
-        return y + estimatedHeight + 25;
+        return y + estimatedHeight + 20;
     }
 }
