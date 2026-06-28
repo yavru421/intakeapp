@@ -226,6 +226,7 @@ export default {
                 border: 1px solid var(--border);
                 display: none;
                 flex: 1;
+                flex-direction: column;
               }
               .placeholder-detail {
                 display: flex;
@@ -359,7 +360,13 @@ export default {
                 
                 <div id="detail-card" class="detail-card">
                   <h2 id="detail-title" style="margin-top: 0; margin-bottom: 4px; color: #fff;">Client Project Blueprint</h2>
-                  <div id="detail-contact" style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 20px;"></div>
+                  <div id="detail-contact" style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 15px;"></div>
+                  
+                  <!-- Prominent Client Vision Section -->
+                  <div id="detail-comment-section" style="background-color: #0f172a; border-radius: 8px; border: 1px solid var(--border); padding: 16px; margin-bottom: 20px;">
+                    <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-bottom: 6px; font-weight: bold; letter-spacing: 0.05em;">Client Vision & Workflow</div>
+                    <div id="detail-comment" style="font-size: 0.95rem; color: #f8fafc; line-height: 1.5; white-space: pre-wrap; font-style: italic;"></div>
+                  </div>
                   
                   <div class="tabs">
                     <button class="tab-btn active" onclick="switchTab('tab-flowchart')">Architecture Flow Chart</button>
@@ -403,8 +410,18 @@ export default {
               mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
               
               function getAnswerText(answers, qId) {
-                const a = answers.find(ans => ans.QuestionId === qId);
-                return a ? a.AnswerText : "";
+                const a = answers.find(ans => ans.QuestionId === qId || ans.questionId === qId);
+                return a ? a.AnswerText || a.answerText : "";
+              }
+              
+              function escapeHtml(str) {
+                if (!str) return "";
+                return str
+                  .replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
               }
               
               function selectSubmission(id) {
@@ -423,9 +440,12 @@ export default {
                 const clientEmail = getAnswerText(sub.answers, "client_email") || "N/A";
                 const clientPhone = getAnswerText(sub.answers, "client_phone") || "N/A";
                 const projectName = getAnswerText(sub.answers, "project_name") || "Untitled";
+                const clientLocation = getAnswerText(sub.answers, "client_location") || "N/A";
+                const clientComment = getAnswerText(sub.answers, "client_comment") || "No description provided.";
 
                 document.getElementById('detail-title').innerHTML = escapeHtml(projectName) + ' <span style="font-size: 0.95rem; font-weight: normal; color: #94a3b8;">by ' + escapeHtml(clientName) + '</span>';
-                document.getElementById('detail-contact').innerHTML = '<strong>Email:</strong> <a href="mailto:' + escapeHtml(clientEmail) + '" style="color: var(--primary); text-decoration: none;">' + escapeHtml(clientEmail) + '</a> | <strong>Phone:</strong> ' + escapeHtml(clientPhone);
+                document.getElementById('detail-contact').innerHTML = '<strong>Email:</strong> <a href="mailto:' + escapeHtml(clientEmail) + '" style="color: var(--primary); text-decoration: none;">' + escapeHtml(clientEmail) + '</a> | <strong>Phone:</strong> ' + escapeHtml(clientPhone) + ' | <strong>Location:</strong> ' + escapeHtml(clientLocation);
+                document.getElementById('detail-comment').textContent = clientComment;
                 
                 // Tech Stack Tab
                 const offline = getAnswerText(sub.answers, "q_offline");

@@ -141,6 +141,20 @@
                 setTimeout(() => URL.revokeObjectURL(url), 2000);
             }
         };
+
+        window.getUserLocation = () => {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve("Not Supported");
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve(pos.coords.latitude.toFixed(6) + "," + pos.coords.longitude.toFixed(6)),
+                    (err) => resolve("Permission Denied: " + err.message),
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            });
+        };
     </script>
 </body>
 </html>

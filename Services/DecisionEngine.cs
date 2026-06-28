@@ -13,125 +13,125 @@ namespace IntakeApp.Services
             // Build the expert system logic graph
             
             // Phase 1: Core Identity
-            AddNode("start", "What is the primary domain of this application?", new[]
+            AddNode("start", "Where will people use this app most?", new[]
             {
-                new AnswerOption { Text = "Field Service / Dispatch", NextNodeId = "q_field_actor" },
-                new AnswerOption { Text = "Internal Operations / Management", NextNodeId = "q_office_actor" },
-                new AnswerOption { Text = "Customer-Facing Portal / E-commerce", NextNodeId = "q_customer_actor" }
+                new AnswerOption { Text = "Out on the road (by drivers, technicians, or field workers)", NextNodeId = "q_field_actor" },
+                new AnswerOption { Text = "In the office (by employees, managers, or admin staff)", NextNodeId = "q_office_actor" },
+                new AnswerOption { Text = "On the web/app store (by the general public or our customers)", NextNodeId = "q_customer_actor" }
             });
 
             // Branch: Field Service
-            AddNode("q_field_actor", "Who is the primary actor using the app day-to-day?", new[]
+            AddNode("q_field_actor", "Who will be using this app most often out in the field?", new[]
             {
-                new AnswerOption { Text = "Our technicians out in the field", NextNodeId = "q_offline" },
-                new AnswerOption { Text = "Dispatchers in the office", NextNodeId = "q_volume" }
+                new AnswerOption { Text = "Our workers/technicians on the road", NextNodeId = "q_offline" },
+                new AnswerOption { Text = "Our office coordinators/dispatchers", NextNodeId = "q_volume" }
             });
 
             // Branch: Office
-            AddNode("q_office_actor", "Who is the primary actor using the app day-to-day?", new[]
+            AddNode("q_office_actor", "Who will be using this app most often in the office?", new[]
             {
-                new AnswerOption { Text = "Managers / Executives", NextNodeId = "q_volume" },
-                new AnswerOption { Text = "Data Entry / Operations staff", NextNodeId = "q_volume" }
+                new AnswerOption { Text = "Managers and business leaders", NextNodeId = "q_volume" },
+                new AnswerOption { Text = "Regular staff and data entry workers", NextNodeId = "q_volume" }
             });
 
             // Branch: Customer
-            AddNode("q_customer_actor", "Who is the primary actor using the app day-to-day?", new[]
+            AddNode("q_customer_actor", "Who are the customers using this app?", new[]
             {
-                new AnswerOption { Text = "Public Consumers (B2C)", NextNodeId = "q_volume" },
-                new AnswerOption { Text = "Corporate Clients (B2B)", NextNodeId = "q_volume" }
+                new AnswerOption { Text = "Everyday consumers (like people buying online)", NextNodeId = "q_volume" },
+                new AnswerOption { Text = "Other businesses or corporate clients", NextNodeId = "q_volume" }
             });
 
             AddNode("q_volume", "Roughly how many people will use this app every day?", new[]
             {
-                new AnswerOption { Text = "Under 10", NextNodeId = "q_input" },
-                new AnswerOption { Text = "10 to 50", NextNodeId = "q_input" },
-                new AnswerOption { Text = "50 to 500", NextNodeId = "q_input" },
-                new AnswerOption { Text = "500+ (Mass consumer)", NextNodeId = "q_input" }
+                new AnswerOption { Text = "Fewer than 10 people", NextNodeId = "q_input" },
+                new AnswerOption { Text = "Between 10 and 50 people", NextNodeId = "q_input" },
+                new AnswerOption { Text = "Between 50 and 500 people", NextNodeId = "q_input" },
+                new AnswerOption { Text = "More than 500 people", NextNodeId = "q_input" }
             });
 
             // Phase 2: Data & Hardware
-            AddNode("q_input", "How will users primarily enter data?", new[]
+            AddNode("q_input", "How will people enter information into the app?", new[]
             {
-                new AnswerOption { Text = "Lots of manual typing (forms, notes)", NextNodeId = "q_location" },
-                new AnswerOption { Text = "Taking photos / uploading files", NextNodeId = "q_media" },
-                new AnswerOption { Text = "Scanning Barcodes or QR codes", NextNodeId = "q_location" },
-                new AnswerOption { Text = "Automated data feeds from other systems", NextNodeId = "q_integrations" }
+                new AnswerOption { Text = "Typing in text, notes, or filling out forms", NextNodeId = "q_location" },
+                new AnswerOption { Text = "Taking photos or uploading documents/files", NextNodeId = "q_media" },
+                new AnswerOption { Text = "Scanning barcodes or QR codes with a camera", NextNodeId = "q_location" },
+                new AnswerOption { Text = "Getting it automatically sent from other computer systems", NextNodeId = "q_integrations" }
             });
 
-            AddNode("q_media", "Will users be uploading heavy media?", new[]
+            AddNode("q_media", "Will people need to upload large files like videos or high-quality photos?", new[]
             {
-                new AnswerOption { Text = "Yes, high-res photos or videos from job sites", NextNodeId = "q_location" },
-                new AnswerOption { Text = "Yes, but mostly small PDFs or documents", NextNodeId = "q_location" },
-                new AnswerOption { Text = "No, strictly text and numbers", NextNodeId = "q_location" }
+                new AnswerOption { Text = "Yes, large videos or high-resolution photos", NextNodeId = "q_location" },
+                new AnswerOption { Text = "Yes, but only small files like PDFs or documents", NextNodeId = "q_location" },
+                new AnswerOption { Text = "No, only text and numbers", NextNodeId = "q_location" }
             });
 
-            AddNode("q_offline", "What happens if the user's internet connection drops?", new[]
+            AddNode("q_offline", "Should the app work even when there's no internet or cell service (like in remote areas or basements)?", new[]
             {
-                new AnswerOption { Text = "The app can just show an error (always online)", NextNodeId = "q_location" },
-                new AnswerOption { Text = "They need to view previously loaded data (read-only offline)", NextNodeId = "q_location" },
-                new AnswerOption { Text = "They MUST be able to continue working and save new data that syncs later", NextNodeId = "q_location" }
+                new AnswerOption { Text = "No, it is fine if the app requires internet to work", NextNodeId = "q_location" },
+                new AnswerOption { Text = "Yes, they should be able to view information offline", NextNodeId = "q_location" },
+                new AnswerOption { Text = "Yes, they must be able to continue working and save info offline, then sync later when back online", NextNodeId = "q_location" }
             });
 
-            AddNode("q_location", "Does the app need to track physical locations?", new[]
+            AddNode("q_location", "Does the app need to track where people are located?", new[]
             {
-                new AnswerOption { Text = "Yes, live GPS tracking / Geofencing", NextNodeId = "q_auth" },
-                new AnswerOption { Text = "Yes, just capturing a static address or pin drop", NextNodeId = "q_auth" },
-                new AnswerOption { Text = "No location features needed", NextNodeId = "q_auth" }
+                new AnswerOption { Text = "Yes, we need live location tracking (GPS)", NextNodeId = "q_auth" },
+                new AnswerOption { Text = "Yes, we just need to save an address or a single location pin", NextNodeId = "q_auth" },
+                new AnswerOption { Text = "No, location tracking is not needed", NextNodeId = "q_auth" }
             });
 
             // Phase 3: Auth & Logic
-            AddNode("q_auth", "How does someone get an account?", new[]
+            AddNode("q_auth", "How should users sign in or gain access to the app?", new[]
             {
-                new AnswerOption { Text = "Anyone can sign up freely", NextNodeId = "q_output" },
-                new AnswerOption { Text = "Invite-only (Administrators create accounts)", NextNodeId = "q_output" },
-                new AnswerOption { Text = "Single-Sign-On (Microsoft/Google workplace)", NextNodeId = "q_output" },
-                new AnswerOption { Text = "No accounts needed (Public app)", NextNodeId = "q_output" }
+                new AnswerOption { Text = "Anyone should be able to sign up on their own", NextNodeId = "q_output" },
+                new AnswerOption { Text = "Accounts must be created manually by an administrator", NextNodeId = "q_output" },
+                new AnswerOption { Text = "Users should log in using their work email (like Google or Microsoft office account)", NextNodeId = "q_output" },
+                new AnswerOption { Text = "No log-in or accounts are needed at all", NextNodeId = "q_output" }
             });
 
-            AddNode("q_output", "What is the primary output or deliverable of the app?", new[]
+            AddNode("q_output", "What is the main thing the app should produce or create?", new[]
             {
-                new AnswerOption { Text = "A generated PDF report (e.g., invoices, inspections)", NextNodeId = "q_money" },
-                new AnswerOption { Text = "A live analytics dashboard", NextNodeId = "q_money" },
-                new AnswerOption { Text = "Pushing data silently to another database", NextNodeId = "q_integrations" }
+                new AnswerOption { Text = "A PDF document (like an invoice, receipt, or inspection report)", NextNodeId = "q_money" },
+                new AnswerOption { Text = "Charts, graphs, and stats on a dashboard screen", NextNodeId = "q_money" },
+                new AnswerOption { Text = "Just sending data silently to our other database systems", NextNodeId = "q_integrations" }
             });
 
-            AddNode("q_money", "Are there any financial transactions happening inside the app?", new[]
+            AddNode("q_money", "Will you be collecting credit card payments or invoicing clients directly through this app?", new[]
             {
-                new AnswerOption { Text = "Yes, recurring subscriptions (Stripe)", NextNodeId = "q_notifications" },
-                new AnswerOption { Text = "Yes, one-off invoice payments", NextNodeId = "q_notifications" },
-                new AnswerOption { Text = "No money is handled directly in the app", NextNodeId = "q_notifications" }
+                new AnswerOption { Text = "Yes, recurring subscription payments (like Stripe)", NextNodeId = "q_notifications" },
+                new AnswerOption { Text = "Yes, one-time payments or invoices", NextNodeId = "q_notifications" },
+                new AnswerOption { Text = "No, we won't be handling payments in the app", NextNodeId = "q_notifications" }
             });
 
-            AddNode("q_notifications", "Do users need to be actively notified of events?", new[]
+            AddNode("q_notifications", "How should the app send alerts or notifications to users?", new[]
             {
-                new AnswerOption { Text = "Yes, via SMS text messages", NextNodeId = "q_integrations" },
-                new AnswerOption { Text = "Yes, via App Push Notifications", NextNodeId = "q_integrations" },
-                new AnswerOption { Text = "Yes, but standard Emails are fine", NextNodeId = "q_integrations" },
-                new AnswerOption { Text = "No active alerts needed", NextNodeId = "q_integrations" }
+                new AnswerOption { Text = "Via SMS text messages", NextNodeId = "q_integrations" },
+                new AnswerOption { Text = "Via Push notifications on their phones", NextNodeId = "q_integrations" },
+                new AnswerOption { Text = "Via standard emails", NextNodeId = "q_integrations" },
+                new AnswerOption { Text = "No alerts or notifications are needed", NextNodeId = "q_integrations" }
             });
 
-            AddNode("q_integrations", "Does this app need to integrate with your existing legacy software?", new[]
+            AddNode("q_integrations", "Do you want this app to automatically sync data with other systems you already use (like QuickBooks, Salesforce, or Sage)?", new[]
             {
-                new AnswerOption { Text = "Yes, accounting software (QuickBooks, Sage)", NextNodeId = "q_process" },
-                new AnswerOption { Text = "Yes, a CRM (Salesforce, HubSpot)", NextNodeId = "q_process" },
-                new AnswerOption { Text = "Yes, a custom internal database (SQL)", NextNodeId = "q_process" },
-                new AnswerOption { Text = "No, it will operate completely standalone", NextNodeId = "q_process" }
+                new AnswerOption { Text = "Yes, accounting systems (like QuickBooks or Sage)", NextNodeId = "q_process" },
+                new AnswerOption { Text = "Yes, customer systems (like Salesforce or HubSpot)", NextNodeId = "q_process" },
+                new AnswerOption { Text = "Yes, our own custom internal database", NextNodeId = "q_process" },
+                new AnswerOption { Text = "No, this app can be completely standalone", NextNodeId = "q_process" }
             });
 
             // Phase 4: Project Realities
-            AddNode("q_process", "Is there an existing manual process (paper/Excel) this is replacing?", new[]
+            AddNode("q_process", "Are you replacing an existing manual process, like paper forms or Excel sheets?", new[]
             {
-                new AnswerOption { Text = "Yes, and it's a complete mess (Hair on fire)", NextNodeId = "q_timeline" },
-                new AnswerOption { Text = "Yes, but it somewhat works right now", NextNodeId = "q_timeline" },
-                new AnswerOption { Text = "No, this is a brand new initiative", NextNodeId = "q_timeline" }
+                new AnswerOption { Text = "Yes, and the current manual way is a complete mess", NextNodeId = "q_timeline" },
+                new AnswerOption { Text = "Yes, and it somewhat works but could be much better", NextNodeId = "q_timeline" },
+                new AnswerOption { Text = "No, this is a completely new project", NextNodeId = "q_timeline" }
             });
 
-            AddNode("q_timeline", "What is the driving timeline for this project?", new[]
+            AddNode("q_timeline", "When do you need this app to be up and running?", new[]
             {
-                new AnswerOption { Text = "ASAP - We are losing money/time right now", NextNodeId = "end" },
-                new AnswerOption { Text = "1 to 3 months", NextNodeId = "end" },
-                new AnswerOption { Text = "3 to 6 months", NextNodeId = "end" },
-                new AnswerOption { Text = "Just exploring for next year", NextNodeId = "end" }
+                new AnswerOption { Text = "As soon as possible (it is urgent!)", NextNodeId = "end" },
+                new AnswerOption { Text = "In 1 to 3 months", NextNodeId = "end" },
+                new AnswerOption { Text = "In 3 to 6 months", NextNodeId = "end" },
+                new AnswerOption { Text = "We are just exploring options for the future", NextNodeId = "end" }
             });
 
             // Terminal Node

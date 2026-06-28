@@ -20,10 +20,10 @@
                 <p>Your technical requirements have been queued successfully. We've mapped out exactly what you need.</p>
                 <button class="glass-btn primary" @onclick="ResetForm">Start Over</button>
             }
-            else if (currentNode.IsTerminal)
+            else if (!isDetailsCompleted)
             {
-                <h3>Complete Your Profile</h3>
-                <p>Please enter your contact details and project name to generate your custom blueprint.</p>
+                <h3 style="margin-bottom: 8px;">Let's get started</h3>
+                <p style="margin-bottom: 24px; color: #a0aec0; font-size: 0.95rem;">Tell us a bit about yourself and your project before we begin.</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 15px; margin: 20px 0; text-align: left;">
                     <div>
@@ -42,6 +42,20 @@
                         <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem;">Project Name *</label>
                         <input type="text" @bind="projectName" placeholder="My Awesome SaaS App" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #1a202c; color: white;" />
                     </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem;">Describe your project in your own words *</label>
+                        <div style="font-size: 0.8rem; color: #a0aec0; margin-bottom: 8px; line-height: 1.4;">
+                            Tell us what the app should do, or what daily headache it should solve. (e.g., 'I want my field technicians to take a picture of a completed repair, and it should instantly email a PDF receipt to the customer.')
+                        </div>
+                        <textarea @bind="clientComment" placeholder="Explain your vision or daily workflow challenge..." rows="5" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #1a202c; color: white; resize: vertical;" />
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem;">Captured Location</label>
+                        <div style="padding: 12px; border-radius: 8px; border: 1px solid #444; background: #1a202c; color: #a0aec0; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: @(latitudeLongitude.Contains(",") ? "#28c76f" : "#ff9f43");"></span>
+                            @latitudeLongitude
+                        </div>
+                    </div>
                     @if (!string.IsNullOrEmpty(errorMessage))
                     {
                         <div style="color: #ff4d4d; font-size: 0.85rem; margin-top: 5px;">@errorMessage</div>
@@ -49,7 +63,17 @@
                 </div>
                 
                 <div class="button-group" style="margin-top: 20px; justify-content: center;">
-                    <button class="glass-btn primary" @onclick="SubmitForm" style="background: #28c76f; width: 100%;">Generate Blueprint</button>
+                    <button class="glass-btn primary" @onclick="CompleteDetails" style="background: #3b82f6; width: 100%;">Start Questionnaire</button>
+                </div>
+            }
+            else if (currentNode.IsTerminal)
+            {
+                <h3>Blueprint Ready!</h3>
+                <p>We've collected all the details and answers needed. Click below to generate your custom blueprint and submit your project request.</p>
+                
+                <div class="button-group" style="margin-top: 30px; display: flex; flex-direction: column; gap: 12px; align-items: center;">
+                    <button class="glass-btn primary" @onclick="SubmitForm" style="background: #28c76f; width: 100%; padding: 16px;">Generate Blueprint & Submit</button>
+                    <button class="glass-btn secondary" @onclick="UndoLast" style="width: 100%; padding: 12px;">Back to Questions</button>
                 </div>
             }
             else
@@ -67,12 +91,9 @@
                     }
                 </div>
 
-                @if (submission.Answers.Any())
-                {
-                    <div class="button-group" style="margin-top: 24px;">
-                        <button class="glass-btn secondary" style="padding: 8px 16px; font-size: 0.9rem;" @onclick="UndoLast">Back</button>
-                    </div>
-                }
+                <div class="button-group" style="margin-top: 24px;">
+                    <button class="glass-btn secondary" style="padding: 8px 16px; font-size: 0.9rem;" @onclick="UndoLast">Back</button>
+                </div>
             }
         </div>
     </div>
@@ -88,7 +109,43 @@
     private string clientEmail = "";
     private string clientPhone = "";
     private string projectName = "";
+    private string clientComment = "";
+    private string latitudeLongitude = "Requesting location...";
+    private bool isDetailsCompleted = false;
     private string errorMessage = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await RequestLocationAsync();
+        }
+    }
+
+    private async Task RequestLocationAsync()
+    {
+        try
+        {
+            latitudeLongitude = await JSRuntime.InvokeAsync<string>("getUserLocation");
+            StateHasChanged();
+        }
+        catch
+        {
+            latitudeLongitude = "Permission Denied or Not Supported";
+            StateHasChanged();
+        }
+    }
+
+    private void CompleteDetails()
+    {
+        if (string.IsNullOrWhiteSpace(clientName) || string.IsNullOrWhiteSpace(clientEmail) || string.IsNullOrWhiteSpace(projectName) || string.IsNullOrWhiteSpace(clientComment))
+        {
+            errorMessage = "Please fill in all required fields (*) to proceed.";
+            return;
+        }
+        errorMessage = "";
+        isDetailsCompleted = true;
+    }
 
     private void SelectOption(AnswerOption option)
     {
@@ -109,33 +166,41 @@
             submission.Answers.Remove(lastAnswer);
             currentNodeId = lastAnswer.QuestionId;
         }
+        else
+        {
+            isDetailsCompleted = false;
+        }
     }
 
     private async Task SubmitForm()
     {
-        if (string.IsNullOrWhiteSpace(clientName) || string.IsNullOrWhiteSpace(clientEmail) || string.IsNullOrWhiteSpace(projectName))
+        if (string.IsNullOrWhiteSpace(clientName) || string.IsNullOrWhiteSpace(clientEmail) || string.IsNullOrWhiteSpace(projectName) || string.IsNullOrWhiteSpace(clientComment))
         {
             errorMessage = "Please fill in all required fields (*) to proceed.";
+            isDetailsCompleted = false;
             return;
         }
         errorMessage = "";
 
         // Deduplicate contact info answers in case of Back-and-Forward navigation
-        submission.Answers.RemoveAll(a => a.QuestionId == "client_name" || a.QuestionId == "client_email" || a.QuestionId == "client_phone" || a.QuestionId == "project_name");
+        submission.Answers.RemoveAll(a => a.QuestionId == "client_name" || a.QuestionId == "client_email" || a.QuestionId == "client_phone" || a.QuestionId == "project_name" || a.QuestionId == "client_comment" || a.QuestionId == "client_location");
 
         submission.Answers.Add(new AnswerRecord { QuestionId = "client_name", QuestionText = "Contact Name", AnswerText = clientName });
         submission.Answers.Add(new AnswerRecord { QuestionId = "client_email", QuestionText = "Contact Email", AnswerText = clientEmail });
         submission.Answers.Add(new AnswerRecord { QuestionId = "client_phone", QuestionText = "Contact Phone", AnswerText = clientPhone });
         submission.Answers.Add(new AnswerRecord { QuestionId = "project_name", QuestionText = "Project Name", AnswerText = projectName });
+        submission.Answers.Add(new AnswerRecord { QuestionId = "client_comment", QuestionText = "Project Description", AnswerText = clientComment });
+        submission.Answers.Add(new AnswerRecord { QuestionId = "client_location", QuestionText = "Geolocation", AnswerText = latitudeLongitude });
 
         submission.Timestamp = DateTime.UtcNow;
         try
         {
-            submission.DeviceMetadata = await JSRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
+            var userAgent = await JSRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
+            submission.DeviceMetadata = $"Location: {latitudeLongitude} | {userAgent}";
         }
         catch
         {
-            submission.DeviceMetadata = "Unknown Device";
+            submission.DeviceMetadata = $"Location: {latitudeLongitude} | Unknown Device";
         }
         
         try
@@ -158,10 +223,13 @@
         submission = new();
         currentNodeId = "start";
         isSubmitted = false;
+        isDetailsCompleted = false;
         clientName = "";
         clientEmail = "";
         clientPhone = "";
         projectName = "";
+        clientComment = "";
         errorMessage = "";
+        _ = RequestLocationAsync();
     }
 }
