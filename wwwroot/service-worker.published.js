@@ -107,7 +107,10 @@ async function onFetch(event) {
 
     let cachedResponse = null;
     if (event.request.method === 'GET') {
+        const url = new URL(event.request.url);
+        const isApiOrAdmin = url.pathname === '/admin' || url.pathname.startsWith('/api/');
         const shouldServeIndexHtml = event.request.mode === 'navigate'
+            && !isApiOrAdmin
             && !manifestUrlList.some(url => url === event.request.url);
 
         const request = shouldServeIndexHtml ? 'index.html' : event.request;
