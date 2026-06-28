@@ -13,5 +13,5 @@ include = ["**/*"]
 [[d1_databases]]
 binding = "DB"
 database_name = "intake_db"
-database_id = "f0000000-0000-0000-0000-000000000000"
+database_id = "0e922b28-2410-4426-8a4a-26394a7ef953"
 
