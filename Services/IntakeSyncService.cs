@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
@@ -11,6 +13,7 @@ namespace IntakeApp.Services
     public class IntakeSyncService : IAsyncDisposable
     {
         private readonly IJSRuntime _jsRuntime;
+        private readonly HttpClient _httpClient;
         private DotNetObjectReference<IntakeSyncService>? _dotNetHelper;
         private const string StorageKey = "intake_requests";
 
@@ -19,9 +22,10 @@ namespace IntakeApp.Services
 
         public event Action? OnSyncStatusChanged;
 
-        public IntakeSyncService(IJSRuntime jsRuntime)
+        public IntakeSyncService(IJSRuntime jsRuntime, HttpClient httpClient)
         {
             _jsRuntime = jsRuntime;
+            _httpClient = httpClient;
         }
 
         public async Task InitializeAsync()
@@ -99,7 +103,7 @@ namespace IntakeApp.Services
             foreach (var entry in CacheQueue.Where(e => !e.IsSynced && !e.SyncSkip))
             {
                 // Process only non-synced and non-skipped entries
-                bool success = await SimulateServerUpload(entry);
+                bool success = await UploadToServerAsync(entry);
                 if (success)
                 {
                     entry.IsSynced = true;
@@ -110,7 +114,7 @@ namespace IntakeApp.Services
                 else
                 {
                     entry.SyncFailed = true;
-                    entry.ErrorMessage = "Cellular signal too weak (503 Service Unavailable)";
+                    entry.ErrorMessage = "Server upload failed (Check connection)";
                     changed = true;
                 }
             }
@@ -136,7 +140,7 @@ namespace IntakeApp.Services
                 if (IsOnline)
                 {
                     // Force upload of this specific entry
-                    bool success = await SimulateServerUpload(entry, forceSuccess: true);
+                    bool success = await UploadToServerAsync(entry);
                     if (success)
                     {
                         entry.IsSynced = true;
@@ -165,16 +169,18 @@ namespace IntakeApp.Services
             }
         }
 
-        private async Task<bool> SimulateServerUpload(IntakeRequest entry, bool forceSuccess = false)
+        private async Task<bool> UploadToServerAsync(IntakeRequest entry)
         {
-            // Simulate network latency
-            await Task.Delay(1500);
-
-            if (forceSuccess) return true;
-
-            // Random failure simulation to show the "Retry / Skip" UI (20% failure chance)
-            var rand = new Random();
-            return rand.NextDouble() > 0.2;
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/submissions", entry);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"UploadToServerAsync failed: {ex.Message}");
+                return false;
+            }
         }
 
         private async Task SaveToStorageAsync()

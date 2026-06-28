@@ -25,3 +25,7 @@ Thumbs.db
 .antigravity/
 dotnet/
 dotnet-install.sh
+
+## Cloudflare Wrangler and Node
+.wrangler/
+node_modules/

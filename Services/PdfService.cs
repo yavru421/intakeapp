@@ -18,10 +18,10 @@ public class PdfService
         var gfx = XGraphics.FromPdfPage(page);
 
         // Fonts
-        var titleFont = new XFont("Helvetica", 22, XFontStyle.Bold);
-        var headingFont = new XFont("Helvetica", 14, XFontStyle.Bold);
-        var normalFont = new XFont("Helvetica", 12, XFontStyle.Regular);
-        var smallFont = new XFont("Helvetica", 10, XFontStyle.Italic);
+        var titleFont = new XFont("Roboto", 22, XFontStyle.Bold);
+        var headingFont = new XFont("Roboto", 14, XFontStyle.Bold);
+        var normalFont = new XFont("Roboto", 12, XFontStyle.Regular);
+        var smallFont = new XFont("Roboto", 10, XFontStyle.Italic);
 
         int yPosition = 40;
         int leftMargin = 40;

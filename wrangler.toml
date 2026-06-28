@@ -1,4 +1,5 @@
 name = "intakeapp"
+main = "index.js"
 compatibility_date = "2024-05-26"
 
 [build]
@@ -8,4 +9,9 @@ command = "bash build.sh"
 directory = "output/wwwroot"
 not_found_handling = "single-page-application"
 include = ["**/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "intake_db"
+database_id = "f0000000-0000-0000-0000-000000000000"
 

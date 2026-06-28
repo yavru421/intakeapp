@@ -11,4 +11,22 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddScoped<IntakeApp.Services.PdfService>();
 builder.Services.AddScoped<IntakeSyncService>();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+
+// Load PDF fonts client-side for WebAssembly runtime
+try
+{
+    var httpClient = host.Services.GetRequiredService<HttpClient>();
+    var fontBytes = await httpClient.GetByteArrayAsync("Roboto-Regular.ttf");
+    WasmFontResolver.FontBytes = fontBytes;
+    PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new WasmFontResolver();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Failed to load font or set FontResolver: {ex.Message}");
+}
+
+var syncService = host.Services.GetRequiredService<IntakeSyncService>();
+await syncService.InitializeAsync();
+
+await host.RunAsync();
