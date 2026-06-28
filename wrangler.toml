@@ -15,3 +15,6 @@ binding = "DB"
 database_name = "intake_db"
 database_id = "0e922b28-2410-4426-8a4a-26394a7ef953"
 
+[vars]
+ADMIN_USERNAME = "admin"
+

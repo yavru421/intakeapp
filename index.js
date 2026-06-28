@@ -1,6 +1,38 @@
+function checkAuth(request, env) {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Basic ")) {
+    return false;
+  }
+  try {
+    const base64Credentials = authHeader.substring(6);
+    const credentials = atob(base64Credentials);
+    const [username, password] = credentials.split(":");
+    const expectedUsername = env.ADMIN_USERNAME || "admin";
+    const expectedPassword = env.ADMIN_PASSWORD;
+    if (!expectedPassword) {
+      return false;
+    }
+    return username === expectedUsername && password === expectedPassword;
+  } catch (err) {
+    return false;
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // Basic Auth Protection for Admin Routes
+    if (url.pathname === "/admin" || (url.pathname === "/api/submissions" && request.method === "GET")) {
+      if (!checkAuth(request, env)) {
+        return new Response("Unauthorized", {
+          status: 401,
+          headers: {
+            "WWW-Authenticate": 'Basic realm="Admin Dashboard", charset="UTF-8"'
+          }
+        });
+      }
+    }
 
     // API: POST a new submission
     if (url.pathname === "/api/submissions" && request.method === "POST") {
